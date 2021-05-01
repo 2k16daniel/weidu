@@ -51,7 +51,7 @@ let save_biff key filename keyname components =
         let a,b = split (Case_ins.filename_basename file) in
         try
           let tau = key_of_ext false b in
-          [ (size,file,String.uppercase_ascii a,String.uppercase_ascii b,tau) ]
+          [ (size,file,String.uppercase a,String.uppercase b,tau) ]
         with _ ->
           log_only "WARNING: Not including [%s]: unknown resource type\n"
             file ; []
@@ -80,9 +80,9 @@ let save_biff key filename keyname components =
     let offset_data = ref (offset_tiles + tile_table_size) in
 
     let buff_size = header_size + file_table_size + tile_table_size in
-    let buff = String.make buff_size '\000' in
+    let buff = Bytes.make buff_size '\000' in
 
-    String.blit "BIFFV1  " 0 buff 0 8 ;
+    Bytes.blit "BIFFV1  " 0 buff 0 8 ;
     write_int buff 8  num_files ;
     write_int buff 12 num_tiles ;
     write_int buff 16 offset_files ;
@@ -105,13 +105,13 @@ let save_biff key filename keyname components =
         log_and_print "ERROR: save_biff failed to close %s during tiles 1\n" f ;
         raise e) ;
       let tisv1 = "TIS V1  " in
-      let istis = String.sub header 0 8 in
+      let istis = Bytes.sub header 0 8 in
       let s = (if istis = tisv1 then s - 24 else s) in
       let off = offset_tiles + (i * 20) in
       let tis_loc = (i + 1) lsl 14 in
       write_int buff (off+0) tis_loc ; (* resource location *)
       write_int buff (off+4) !offset_data ;
-      let tile_size = (if istis = tisv1 then int_of_str (String.sub header 12 4) else 5120) in
+      let tile_size = (if istis = tisv1 then int_of_str (Bytes.sub header 12 4) else 5120) in
       let num_tiles = (s/tile_size) in
       let tis_type = 1003 in
       write_int buff (off+8) num_tiles ;
@@ -401,7 +401,7 @@ let load_biff filename =
       failwith "not a valid BIFF file (wrong sig)"
     end ;
     (
-     match String.sub buff 0 8 with
+     match Bytes.sub buff 0 8 with
        "BIFFV1  " -> load_normal_biff filename size fd buff
            (* comment out this BIFC line if you don't have zlib *)
      | "BIFCV1.0" -> load_compressed_biff filename size fd
@@ -460,15 +460,15 @@ let extract_tis biff i ign =
       end
     in
     let header = Bytes.create 0x18 in
-    String.blit "TIS V1  " 0 header 0 8;
+    Bytes.blit "TIS V1  " 0 header 0 8;
     let str = str_of_int this.tis_number_of_tiles in
-    String.blit str 0 header 0x08 4 ;
+    Bytes.blit str 0 header 0x08 4 ;
     let str = str_of_int this.tis_size_of_one_tile in
-    String.blit str 0 header 0x0c 4 ;
+    Bytes.blit str 0 header 0x0c 4 ;
     let str = str_of_int 0x18 in
-    String.blit str 0 header 0x10 4 ;
+    Bytes.blit str 0 header 0x10 4 ;
     let str = str_of_int 64 in
-    String.blit str 0 header 0x14 4 ;
+    Bytes.blit str 0 header 0x14 4 ;
     header ^ buff
   with e ->
     if not ign then log_and_print "ERROR: BIFF [%s]: unable to extract tileset %d\n"
@@ -480,15 +480,15 @@ let copy_file biff i oc is_tis =
     check_tile biff i false;
     let this = biff.tilesets.(i) in
     let header = Bytes.create 0x18 in
-    String.blit "TIS V1  " 0 header 0 8;
+    Bytes.blit "TIS V1  " 0 header 0 8;
     let str = str_of_int this.tis_number_of_tiles in
-    String.blit str 0 header 0x08 4 ;
+    Bytes.blit str 0 header 0x08 4 ;
     let str = str_of_int this.tis_size_of_one_tile in
-    String.blit str 0 header 0x0c 4 ;
+    Bytes.blit str 0 header 0x0c 4 ;
     let str = str_of_int 0x18 in
-    String.blit str 0 header 0x10 4 ;
+    Bytes.blit str 0 header 0x10 4 ;
     let str = str_of_int 64 in
-    String.blit str 0 header 0x14 4 ;
+    Bytes.blit str 0 header 0x14 4 ;
         output_string oc header;
     (this.tis_number_of_tiles * this.tis_size_of_one_tile) ,
     this.tis_offset
@@ -512,7 +512,7 @@ let copy_file biff i oc is_tis =
       while !sofar < size do
         let chunk_size = min (size - !sofar) chunk_size in
         my_read chunk_size biff.fd chunk biff.filename ;
-        output_string oc (String.sub chunk 0 chunk_size) ;
+        output_string oc (Bytes.sub chunk 0 chunk_size) ;
         sofar := !sofar + chunk_size ;
       done
     end
