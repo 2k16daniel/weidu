@@ -76,7 +76,7 @@ $(PROJECT_EXECUTABLE) : $(PROJECT_MODULES:%=$(OBJDIR)/%.$(CMO)) \
 
 ifeq ($(shell uname -s),Linux)
 	@$(NARRATIVE) Linking Linux executable
-	$(CAMLLINK)-ccopt -static -o $@ \
+	$(CAMLLINK) -o $@ \
                 $(PROJECT_OCAML_LIBS:%=%.$(CMXA)) \
                 $(PROJECT_LIBS:%=-cclib -l%) \
                 $(PROJECT_CLIBS:%=-cclib %) \
@@ -126,7 +126,7 @@ tolower: $(PROJECT3_EXECUTABLE)
 $(PROJECT3_EXECUTABLE) : $(PROJECT3_MODULES:%=$(OBJDIR)/%.$(CMO)) \
                         $(PROJECT3_CMODULES:%=$(OBJDIR)/%.$(OBJEXT))
 	@$(NARRATIVE) Linking $(COMPILETOWHAT) $@
-	$(CAMLLINK)-ccopt -static -o $@ \
+	$(CAMLLINK) -o $@ \
                     $(PROJECT3_OCAML_LIBS:%=%.$(CMXA)) \
                     $(PROJECT3_LIBS:%=-cclib -l%) \
                     $(PROJECT3_CLIBS:%=-cclib %) \
@@ -145,7 +145,7 @@ weinstall: $(PROJECT4_EXECUTABLE)
 $(PROJECT4_EXECUTABLE) : $(PROJECT4_MODULES:%=$(OBJDIR)/%.$(CMO)) \
                         $(PROJECT4_CMODULES:%=$(OBJDIR)/%.$(OBJEXT))
 	@$(NARRATIVE) Linking $(COMPILETOWHAT) $@
-	$(CAMLLINK)-ccopt -static -o $@ \
+	$(CAMLLINK)-o $@ \
                     $(PROJECT4_OCAML_LIBS:%=%.$(CMXA)) \
                     $(PROJECT4_LIBS:%=-cclib -l%) \
                     $(PROJECT4_CLIBS:%=-cclib %) \
