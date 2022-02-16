@@ -25,9 +25,19 @@ let rec get_menu_style fl = match fl with
 | hd :: tl -> get_menu_style tl
 
 let mod_folder tp =
-  (match Var.get_mod_folder tp.tp_filename with
-  | Some s -> s
-  | None -> (match Var.get_mod_folder tp.backup with
+  let parts = List.rev
+      (String.split_on_char '/'
+         (Str.global_replace
+            (Str.regexp "\\\\") "/" tp.tp_filename)) in
+  (match parts with
+  | file :: dir :: _ when
+      (String.equal
+         (String.lowercase
+            (Case_ins.filename_chop_extension
+               (Util.tp2_name
+                  (Case_ins.filename_basename file))))
+         (String.lowercase dir)) -> dir
+  | _ -> (match Var.get_mod_folder tp.backup with
     | Some s -> s
     | None -> tp.backup))
 
@@ -35,7 +45,8 @@ let set_prelang_tp2_vars tp =
   Var.set_string "TP2_AUTHOR" tp.author ;
   Var.set_string "TP2_FILE_NAME" (Case_ins.filename_basename tp.tp_filename) ;
   Var.set_string "TP2_BASE_NAME"
-    (Util.tp2_name (Case_ins.filename_basename tp.tp_filename)) ;
+    (Filename.remove_extension
+       (Util.tp2_name (Case_ins.filename_basename tp.tp_filename))) ;
   Var.set_string "MOD_FOLDER" (mod_folder tp)
 
 let set_postlang_tp2_vars tp =
@@ -116,23 +127,47 @@ let get_last_module_number module_list =
 
 let get_id_of_label tp_file label =
   let ans = ref None in
-  let has_label c = List.mem (TPM_Label label) c.mod_flags in
-  for i = 0 to get_highest_module_number tp_file.Tp.module_list do
-    try
-      let c = get_nth_module tp_file i false in
-      if has_label c then begin match !ans with
-      | None -> ans := Some i
-      | Some j ->
-          ans := Some (Int32.to_int Int32.min_int) ;
-          errors_this_component := true;
-          log_and_print "WARNING: Duplicate LABEL [%s] in tp2 file [%s] (components %d and %d)\n" label tp_file.tp_filename i j
-      end;
-    with Not_found -> ()
-  done;
+  Stats.time "Resolving LABELs" (fun () ->
+    let has_label c = List.mem (TPM_Label label) c.mod_flags in
+    for i = 0 to get_highest_module_number tp_file.Tp.module_list do
+      try
+        let c = get_nth_module tp_file i false in
+        if has_label c then begin match !ans with
+        | None -> ans := Some i
+        | Some j ->
+            ans := Some (Int32.to_int Int32.min_int) ;
+            errors_this_component := true;
+            log_and_print "WARNING: Duplicate LABEL [%s] in tp2 file [%s] (components %d and %d)\n" label tp_file.tp_filename i j
+        end;
+      with Not_found -> ()
+    done; ) () ;
   if !ans = None then begin
     errors_this_component := true;
     log_and_print "WARNING: LABEL [%s] not found in tp2 file [%s]\n" label tp_file.tp_filename end;
   !ans
+
+let verify_labels tp_file =
+  Stats.time "Resolving LABELs" (fun () ->
+    let table = Hashtbl.create (List.length tp_file.Tp.module_list) in
+    for i = 0 to get_highest_module_number tp_file.Tp.module_list do
+      (try
+        let comp = get_nth_module tp_file i false in
+        let label = List.fold_left (fun acc flag ->
+          (match flag with
+          | TPM_Label s -> Some s
+          | _ -> acc)) None comp.Tp.mod_flags
+        in
+        (match label with
+        | Some str when Hashtbl.mem table str ->
+            errors_this_component := true ;
+            log_and_print "WARNING: Duplicate LABEL [%s] in tp2 file [%s] \
+(components %d and %d)\n" str tp_file.Tp.tp_filename
+              (Hashtbl.find table str) i ;
+        | Some str ->
+            Hashtbl.add table str i
+        | None -> ())
+      with Not_found -> ())
+    done) ()
 
 let get_component_list tp_file =
   List.mapi (fun index tp_mod ->

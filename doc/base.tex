@@ -2760,29 +2760,31 @@ Here is the context-free grammar syntax for the \ttref{TP2} file format:
        \ttref{Component} \Slist &
 
        A \ttref{TP2 File} is basically a prologue and then a list of
-       \ttref{Component}s. The \ttref{BACKUP} declaration tells WeiDU where
-       to put backed-up versions of files that would be overwritten so that
-       they can be uninstalled later. This directory will be created
-       automatically if it is missing. The \ttref{AUTHOR} directive gives an
-       email address for users to send bugs to if there are problems during
-       the installation. You may use \DEFINE{SUPPORT} as an alias for
-       \ttref{AUTHOR}. The \DEFINE{TP2!AUTHOR} \ttref{variable} is set to
-       the ``emailAddress'' value. The \DEFINE{TP2!FILE!NAME} \ttref{variable}
-       is set to the name of the tp2 file. The \DEFINE{TP2!BASE!NAME}
-       \ttref{variable} is set to the name of the tp2, excluding any initial
-       ``setup-''. For ``setup-mymod.tp2'', \t{TP2!FILE!NAME} is set to
-       ``setup-mymod.tp2'', while \t{TP2!BASE!NAME} is set to ``mymod.tp2''.
-       The \DEFINE{MOD!FOLDER} \ttref{variable} is set to the
-       directory containing the TP2 file, if there is one, otherwise
-       it is set to the root directory of directoryName.
-       \ttref{TP2 Flag}s set global options.
-       \ttref{Language}s are
+       \ttref{Component}s. The \ttref{BACKUP} declaration tells WeiDU
+       where to put backed-up versions of files that would be
+       overwritten so that they can be uninstalled later. This
+       directory will be created automatically if it is missing. The
+       \ttref{AUTHOR} directive gives an email address for users to
+       send bugs to if there are problems during the installation. You
+       may use \DEFINE{SUPPORT} as an alias for \ttref{AUTHOR}. The
+       \DEFINE{TP2!AUTHOR} \ttref{variable} is set to the
+       ``emailAddress'' value. The \DEFINE{TP2!FILE!NAME}
+       \ttref{variable} is set to the name of the tp2 file. The
+       \DEFINE{TP2!BASE!NAME} \ttref{variable} is set to the name of
+       the tp2, excluding any initial ``setup-'' and file
+       extension. For ``setup-mymod.tp2'', \t{TP2!FILE!NAME} is set to
+       ``setup-mymod.tp2'', while \t{TP2!BASE!NAME} is set to
+       ``mymod''.  The \DEFINE{MOD!FOLDER} \ttref{variable} is set to
+       the directory containing the TP2 file, if there is one,
+       otherwise it is set to the root directory of directoryName.
+       \ttref{TP2 Flag}s set global options.  \ttref{Language}s are
        the various languages in which your mod is available. The
-       Finally, the \ttref{Component}s make up the actual meat of
-       your mod. Different \ttref{Component}s can be installed or
+       Finally, the \ttref{Component}s make up the actual meat of your
+       mod. Different \ttref{Component}s can be installed or
        uninstalled separately, but all of the parts within a
        \ttref{Component} are treated as a unit.  \\
-\\
+
+  \\
 
 \DEFINE{TP2 Flag} & & A \ttref{TP2 Flag} declaration tells WeiDU to apply some
 global option to your \ttref{TP2} file. \\
@@ -2791,7 +2793,7 @@ global option to your \ttref{TP2} file. \\
        with the \ttref{COMPILE} \ttref{TP2 Action}. It automatically loads
        \ttref{TRA} files that match your \ttref{D} files. The \ttref{TRA} file
        loaded by \ttref{AUTO!TRA} takes precedence over all other \ttref{TRA}
-       files. \\
+       files. Variables are evaluated when the action is processed. \\
   or & \DEFINE{ALLOW!MISSING} file \Slist &
        \ttref{ALLOW!MISSING} directive allows you to specify files that can
        be missing (when you try to copy them or reference them from
@@ -3835,8 +3837,8 @@ or & \DEFINE{ACTION!BASH!FOR} \ttref{directory-file-regexp} \t{BEGIN} \ttref{TP2
 or & \DEFINE{ACTION!DEFINE!ARRAY} \t{\ttref{String}1 BEGIN \ttref{String}2} \Slist \t{END} &
 	Sets the array \verb+$string1(0)+,\verb+$string1(1)+ etc. to the various elements in string2.
 \\
-or & \DEFINE{ACTION!SORT!ARRAY!INDICES} \t{\ttref{String}
-  \ttref{ArrayIndicesSortType}} &
+or & \DEFINE{ACTION!SORT!ARRAY!INDICES} \t{\ttref{String}}
+  \Ob \ttref{ArrayIndicesSortType} \Oe &
 
   Sorts the indices of the array given by String according to the
   order \ttref{ArrayIndicesSortType}. String is evaluated for
@@ -4654,7 +4656,8 @@ or & \DEFINE{PATCH!DEFINE!ARRAY} \t{\ttref{String}1 BEGIN \ttref{String}2 \Slist
 	Same as \ttref{DEFINE!ARRAY}.
 \\
 
-or & \DEFINE{SORT!ARRAY!INDICES} \t{\ttref{String}} &
+or & \DEFINE{SORT!ARRAY!INDICES} \t{\ttref{String}}
+  \Ob \ttref{ArrayIndicesSortType} \Oe &
 
   Semantically identical to \ttref{ACTION!SORT!ARRAY!INDICES}\\
 
@@ -5078,11 +5081,14 @@ COPY_EXISTING ~some.cre~ ~override/some.cre~
 
 or & \DEFINE{ADD!MEMORIZED!SPELL} splName spellLevel spellType
   \Ob \t{(} \ttref{value} \t{)} \Oe&
-  When applied to a CRE file, this \ttref{patch} causes the given spell to
-  be memorized one more time (or value times if specified).
-  Note that spellLevel counts from 0 (e.g., you
-  should say \t{\#2} for a third-level Fireball). Possible values for spellType
-  are \t{priest}, \t{innate} and \t{wizard}. Example:
+
+  When applied to a CRE file, this \ttref{patch} causes the given
+  spell to be memorized one more time (or value times if
+  specified). The spell is additionally added to the creature's list
+  of known spells.  Note that spellLevel counts from 0 (e.g., you
+  should say \t{\#2} for a third-level Fireball). Possible values for
+  spellType are \t{priest}, \t{innate} and \t{wizard}. Example:
+
 \begin{verbatim}
 COPY_EXISTING ~some.cre~ ~override/some.cre~
   ADD_MEMORIZED_SPELL ~SPPR314~ #2 ~priest~ ( 5 )
@@ -9935,7 +9941,7 @@ This is a PATCH function.
 
 Universal structure variables:
 \begin{itemize}
-\item STR_VAR \verb+fj_structure_type+ to the type of area structure to be added (actor, region, spawn, entrance, container, itm, ambient, variable, door, animation, explored bitmask, songlist, rest interrupt table, note or projectile)*;
+\item STR_VAR \verb+fj_structure_type+ to the type of area structure to be added (actor, region, spawn, entrance, container, itm, ambient, variable, door, animation, bitmask, songs, interrupts, note or projectile)*;
 \item INT_VAR \verb+fj_delete_mode+ to the index of the structure to be deleted (if deleting rather than adding a new structure);
 \item INT_VAR \verb+fj_debug+ to 1 to enable feedback
 \item RET \verb+fj_return_offset+ returns the position of the structure in the area file;
@@ -10014,6 +10020,9 @@ Spawn structure variables:
 \item INT_VAR \verb+fj_schedule+ to the hourly appearance schedule (bits 0-23, default -1 or always);
 \item INT_VAR \verb+fj_day_prob+ to the spawn point daytime probability (default 100);
 \item INT_VAR \verb+fj_night_prob+ to the spawn point nighttime probability (default 100);
+\item INT_VAR \verb+fj_spawn_freq+ to the spawn frequency in seconds (Enhanced Editions only);
+\item INT_VAR \verb+fj_countdown+ to the spawn countdown (Enhanced Editions only);
+\item INT_VAR \verb+fj_weight0...fj_weight9+ to the weight of the spawn creatures (Enhanced Editions only);
 \end{itemize}
 Entrance structure variables:
 \begin{itemize}
@@ -10132,6 +10141,8 @@ Animation structure variables:
 \item INT_VAR \verb+fj_loop_chance+ to the chance of looping;
 \item INT_VAR \verb+fj_skip_cycles+ to start delay in frames;
 \item STR_VAR \verb+fj_bmp_resref+ to the palette bitmap;
+\item INT_VAR \verb+fj_width+ to the animation width (only required for WBM and PVRZ resources, Enhanced Editions only);
+\item INT_VAR \verb+fj_height+ to the animation height (only required for WBM and PVRZ resources, Enhanced Editions only);
 \end{itemize}
 Bitmask structure variables:
 \begin{itemize}
@@ -10144,6 +10155,11 @@ Songlist structure variables:
 \item INT_VAR \verb+fj_song_victory+ to the victory SONGLIST.2DA entry;
 \item INT_VAR \verb+fj_song_battle+ to the battle SONGLIST.2DA entry;
 \item INT_VAR \verb+fj_song_defeat+ to the defeat SONGLIST.2DA entry;
+\item INT_VAR \verb+fj_song_day_alt+ to the alternative day SONGLIST.2DA entry (default -1, Enhanced Editions only);
+\item INT_VAR \verb+fj_song_night_alt+ to the alternative night SONGLIST.2DA entry (default -1, Enhanced Editions only);
+\item INT_VAR \verb+fj_song_victory_alt+ to the alternative victory SONGLIST.2DA entry (default -1, Enhanced Editions only);
+\item INT_VAR \verb+fj_song_battle_alt+ to the alternative battle SONGLIST.2DA entry (default -1, Enhanced Editions only);
+\item INT_VAR \verb+fj_song_defeat_alt+ to the alternative defeat SONGLIST.2DA entry (default -1, Enhanced Editions only);
 \item STR_VAR \verb+fj_song_day0+ to the day song WAV resref;
 \item STR_VAR \verb+fj_song_day1+ to the night song WAV resref;
 \item INT_VAR \verb+fj_song_day_vol+ to the day songs volume (default 100);
@@ -10187,8 +10203,9 @@ Projectile trap structure variables (not available on PST):
 \item INT_VAR \verb+fj_loc_x+ to the X coordinate*;
 \item INT_VAR \verb+fj_loc_y+ to the Y coordinate*;
 \item INT_VAR \verb+fj_loc_z+ to the height;
-\item INT_VAR \verb+fj_target+ to the target ID;
-\item STR_VAR \verb+fj_embedded_eff0+ to ~path/to/v2.eff~ or eff resref containing to projectile's effects*;
+\item INT_VAR \verb+fj_target+ to the ea.ids value of the target;
+\item INT_VAR \verb+fj_creator+ to the index of the party member who created this projectile (0-5);
+\item STR_VAR \verb+fj_embedded_eff_0+ to ~path/to/v2.eff~ or eff resref containing to projectile's effects* Subsequent indices can be used for additional effects;
 \end{itemize}
 A few examples best illustrate the use of this function.
 
